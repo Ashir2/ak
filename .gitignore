@@ -1,33 +1,97 @@
-# Gradle files
-.gradle/
-build/
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Camera Access with Control</title>
+  <style>
+    video {
+      width: 100%;
+      max-width: 600px;
+      border: 2px solid #333;
+      border-radius: 10px;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 30px;
+      font-family: Arial;
+    }
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      background-color: #333;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>Live Camera Preview</h1>
+  <video id="camera" autoplay playsinline></video>
 
-# Local configuration file (sdk path, etc)
-local.properties
+  <div class="controls">
+    <button onclick="pauseCamera()">Pause</button>
+    <button onclick="resumeCamera()">Resume</button>
+    <button onclick="stopCamera()">Stop</button>
+    <button onclick="switchCamera()">Switch Camera</button>
+  </div>
 
-# Log/OS Files
-*.log
+  <script>
+    const video = document.getElementById('camera');
+    let currentStream = null;
+    let currentFacingMode = 'user'; // 'user' = front, 'environment' = back
 
-# Android Studio generated files and folders
-captures/
-.externalNativeBuild/
-.cxx/
-*.apk
-output.json
+    async function startCamera(facingMode = 'user') {
+      if (currentStream) {
+        stopTracks(currentStream);
+      }
 
-# IntelliJ
-*.iml
-.idea/
-misc.xml
-deploymentTargetDropDown.xml
-render.experimental.xml
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
+        currentStream = stream;
+        video.srcObject = stream;
+        currentFacingMode = facingMode;
+      } catch (error) {
+        alert('Camera access denied or not available: ' + error.message);
+      }
+    }
 
-# Keystore files
-*.jks
-*.keystore
+    function stopTracks(stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
 
-# Google Services (e.g. APIs or Firebase)
-google-services.json
+    function pauseCamera() {
+      video.pause();
+    }
 
-# Android Profiling
-*.hprof
+    function resumeCamera() {
+      video.play();
+    }
+
+    function stopCamera() {
+      if (currentStream) {
+        stopTracks(currentStream);
+        video.srcObject = null;
+      }
+    }
+
+    function switchCamera() {
+      const newFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+      startCamera(newFacingMode);
+    }
+
+    // Start with default (front) camera
+    startCamera();
+  </script>
+</body>
+</html>
